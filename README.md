@@ -107,23 +107,25 @@ technical terms were introduced without simple definitions.
 
 This allows the system to improve across different runs without a human manually editing the generation prompt after every failure.
 
-Guaranteed termination
+## Guaranteed termination
 
 The current configuration uses:
 
-MAX_RETRIES = 1
+MAX_RETRIES = 2
 
 This means:
 
 Attempt 1 → Initial generation
 
-Attempt 2 → One retry using evaluator feedback
+Attempt 2 → First retry using evaluator feedback
 
-Therefore, the pipeline performs a maximum of 2 generation attempts per run.
+Attempt 3 → Second retry using evaluator feedback
 
-If the second attempt passes all rubric checkpoints, the lesson is shipped.
+Therefore, the pipeline performs a maximum of 3 generation attempts per run.
 
-If the second attempt still fails, the pipeline terminates with:
+If any attempt passes all rubric checkpoints, the lesson is shipped immediately.
+
+If the third attempt still fails, the pipeline terminates with:
 
 MAX_RETRIES_REACHED
 
