@@ -225,7 +225,7 @@ source code
 Example .env:
 
 LLM_PROVIDER=gemini
-LLM_MODEL=gemini-3.6-flash
+LLM_MODEL=gemini-3.5-flash-lite
 GOOGLE_API_KEY=your_api_key_here
 
 The .env file is excluded from Git through .gitignore.
