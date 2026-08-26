@@ -312,9 +312,9 @@ The failed reasons are then passed to the generator.
 The next generation is produced without deliberate error injection and
 uses the evaluator's feedback.
 
-If the second attempt passes all checkpoints, it is shipped.
+If any retry attempt passes all checkpoints, it is shipped.
 
-If it still fails, the pipeline terminates with `MAX_RETRIES_REACHED`.
+If all three attempts fail, the pipeline terminates with MAX_RETRIES_REACHED.
 
 ## Output files
 
@@ -406,7 +406,7 @@ or model problems cannot create an infinite loop.
 
 Possible extensions include:
 
-- deterministic lesson completeness validation
+- stronger deterministic lesson completeness validation
 - stronger output-length handling
 - independent evaluator model
 - reference-document retrieval
