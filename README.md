@@ -62,7 +62,7 @@ LLMClient.complete(...)
 
 The architecture supports:
 
-- Google Gemini
+- Groq
 - Anthropic Claude
 - OpenAI
 
@@ -239,7 +239,7 @@ runs.
 
 Choose one supported provider.
 
-For Gemini, create an API key through Google AI Studio.
+For Groq, create an API key through the Groq console.
 
 The API key should be stored only in `.env`.
 
@@ -253,9 +253,9 @@ Do not put the real API key in:
 Example `.env`:
 
 ```
-LLM_PROVIDER=gemini
-LLM_MODEL=gemini-3.5-flash-lite
-GOOGLE_API_KEY=your_api_key_here
+LLM_PROVIDER=groq
+LLM_MODEL=openai/gpt-oss-120b
+GROQ_API_KEY=your_api_key_here
 ```
 
 The `.env` file is excluded from Git through `.gitignore`.
@@ -275,6 +275,17 @@ Create `.env` from `.env.example` and add your API key.
 ```bash
 python main.py --topic "RAG (Retrieval-Augmented Generation)"
 ```
+
+### 4. Open the question-answer UI
+
+Start the Streamlit frontend:
+
+```bash
+streamlit run app.py
+```
+
+Then open the local URL shown in the terminal. The UI uses the same Groq
+configuration from `.env` and returns an answer for each prompt.
 
 ### 4. Check the outputs
 

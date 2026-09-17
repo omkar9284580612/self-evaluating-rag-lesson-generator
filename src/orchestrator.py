@@ -173,7 +173,10 @@ def build_graph(generator: Generator, evaluator: Evaluator):
         lesson = state["lesson"]
 
         # Always run the actual LLM evaluator.
-        evaluation = evaluator.evaluate(lesson)
+        evaluation = evaluator.evaluate(
+            lesson,
+            topic=state["topic"],
+        )
 
         # Run deterministic guard as an additional safety check.
         guard_failure = basic_lesson_guard(lesson)

@@ -1,6 +1,6 @@
 """
 generator.py
-------------
+-------------
 Generates beginner-friendly lessons and regenerates rejected lessons
 using evaluator feedback.
 """
@@ -28,44 +28,25 @@ Create a COMPLETE lesson of approximately 250-350 words.
 
 Use EXACTLY these five sections:
 
-# Introduction to RAG
+# Introduction to {topic}
 
-## 1. What is RAG?
+## 1. What is {topic}?
 
-Explain what Retrieval-Augmented Generation means in simple English.
-Define RAG.
+Define the topic in simple English. Explain what it is and what problem
+it helps solve. Use the topic's correct terminology.
 
-## 2. Why does RAG matter?
+## 2. Why does {topic} matter?
 
-Explain:
-- why an LLM may not know private company information,
-- why an LLM may not know recent information,
-- why an LLM can sometimes produce incorrect information.
+Explain the practical value of the topic and the problem it helps solve.
 
-Explain that RAG CAN REDUCE these problems.
-Do NOT claim that RAG completely prevents hallucinations.
+## 3. How does {topic} work?
 
-## 3. How does RAG work?
-
-Explain these four steps:
-
-1. The user asks a question.
-2. The system searches a knowledge base for relevant information.
-3. The retrieved information is added to the question as context.
-4. The LLM uses that context to generate an answer.
-
-Explain each step in simple language.
+Explain the main parts or steps in simple language. Define each technical
+term when it first appears.
 
 ## 4. Simple real-world example
 
-Give ONE complete example.
-
-Example:
-A company has a private return-policy document.
-A customer asks whether shoes can be returned after 20 days.
-The RAG system finds the relevant rule from the document.
-The retrieved rule is given to the LLM.
-The LLM answers the customer.
+Give ONE complete, step-by-step example related to the topic.
 
 ## 5. Key takeaway
 
@@ -78,8 +59,6 @@ STRICT RULES:
 - Define technical terms when first introduced.
 - Avoid unnecessary jargon.
 - Do not use unexplained terms.
-- Do not introduce embeddings, vectors, cosine similarity,
-  vector databases, or chunking unless absolutely necessary.
 - Do not make absolute claims.
 - Complete every section.
 - Never stop in the middle of a sentence.

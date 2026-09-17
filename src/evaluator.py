@@ -57,10 +57,11 @@ class Evaluator:
     def evaluate(
         self,
         lesson_markdown: str,
+        topic: str = "the requested topic",
     ) -> dict:
 
         prompt = EVAL_PROMPT.format(
-            rubric_block=rubric_as_prompt_block(),
+            rubric_block=rubric_as_prompt_block(topic),
             lesson=lesson_markdown,
         )
 

@@ -4,7 +4,7 @@ llm_client.py
 Provider-agnostic LLM wrapper.
 
 Supported:
-- Gemini
+- Groq
 - Anthropic
 - OpenAI
 """
@@ -16,6 +16,16 @@ import time
 import requests
 
 
+class TransientLLMError(RuntimeError):
+    """An LLM request failed temporarily and can be retried."""
+
+
+def _clean_env_value(value):
+    if value is None:
+        return None
+    return str(value).strip().strip('"\'')
+
+
 class LLMClient:
 
     def __init__(
@@ -25,36 +35,41 @@ class LLMClient:
     ):
 
         self.provider = (
-            provider
-            or os.getenv(
-                "LLM_PROVIDER",
-                "gemini",
+            _clean_env_value(
+                provider
+                or os.getenv(
+                    "LLM_PROVIDER",
+                    "groq",
+                )
             )
+            or "groq"
         ).lower()
 
-        self.model = (
+        self.model = _clean_env_value(
             model
             or os.getenv(
                 "LLM_MODEL",
                 self._default_model(),
             )
-        )
+        ) or self._default_model()
 
-        self.api_key = os.getenv(
-            self._key_env_name()
+        self.api_key = _clean_env_value(
+            os.getenv(
+                self._key_env_name()
+            )
         )
 
         if not self.api_key:
             raise RuntimeError(
-                f"Missing API key. "
-                f"Set {self._key_env_name()} "
-                f"in your .env file."
+                f"Missing API key. Set {self._key_env_name()} "
+                "in your .env file without spaces or quotes. "
+                "Example: GROQ_API_KEY=your_key_here"
             )
 
     def _default_model(self):
 
         models = {
-            "gemini": "gemini-3.6-flash",
+            "groq": "openai/gpt-oss-120b",
             "anthropic": "claude-sonnet-4-6",
             "openai": "gpt-4o-mini",
         }
@@ -70,7 +85,7 @@ class LLMClient:
     def _key_env_name(self):
 
         keys = {
-            "gemini": "GOOGLE_API_KEY",
+            "groq": "GROQ_API_KEY",
             "anthropic": "ANTHROPIC_API_KEY",
             "openai": "OPENAI_API_KEY",
         }
@@ -99,8 +114,8 @@ class LLMClient:
 
             try:
 
-                if self.provider == "gemini":
-                    return self._call_gemini(
+                if self.provider == "groq":
+                    return self._call_groq(
                         prompt,
                         temperature,
                         max_tokens,
@@ -126,7 +141,7 @@ class LLMClient:
                     f"{self.provider}"
                 )
 
-            except requests.RequestException as error:
+            except (requests.RequestException, TransientLLMError) as error:
 
                 if attempt == retries:
                     raise
@@ -141,7 +156,7 @@ class LLMClient:
 
                 time.sleep(wait)
 
-    def _call_gemini(
+    def _call_groq(
         self,
         prompt,
         temperature,
@@ -149,82 +164,72 @@ class LLMClient:
         json_mode=False,
     ):
 
-        url = (
-            "https://generativelanguage.googleapis.com/"
-            f"v1beta/models/{self.model}:generateContent"
-            f"?key={self.api_key}"
-        )
+        url = "https://api.groq.com/openai/v1/chat/completions"
 
-        generation_config = {
-            "maxOutputTokens": max_tokens,
-            "responseMimeType": (
-                "application/json"
-                if json_mode
-                else "text/plain"
-            ),
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
         }
 
         body = {
-            "contents": [
+            "model": self.model,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "messages": [
                 {
-                    "parts": [
-                        {
-                            "text": prompt
-                        }
-                    ]
+                    "role": "user",
+                    "content": prompt,
                 }
             ],
-            "generationConfig": generation_config,
         }
+
+        if json_mode:
+            body["response_format"] = {"type": "json_object"}
 
         response = requests.post(
             url,
+            headers=headers,
             json=body,
             timeout=60,
         )
+
+        if response.status_code >= 400:
+            detail = response.text.strip()
+            message = (
+                "Groq API request failed. Check the values in .env "
+                f"(provider={self.provider}, model={self.model}). "
+                f"HTTP {response.status_code}: {detail[:250]}"
+            )
+
+            if response.status_code == 429 or response.status_code >= 500:
+                raise TransientLLMError(message)
+
+            raise RuntimeError(message)
 
         response.raise_for_status()
 
         data = response.json()
 
-        candidates = data.get(
-            "candidates",
-            [],
-        )
+        choices = data.get("choices", [])
 
-        if not candidates:
+        if not choices:
             raise ValueError(
-                f"Gemini returned no candidates: "
+                f"Groq returned no choices: "
                 f"{data}"
             )
 
-        candidate = candidates[0]
-
-        finish_reason = candidate.get(
-            "finishReason",
-            "UNKNOWN",
-        )
+        choice = choices[0]
 
         print(
-            f"[Gemini] finishReason: "
-            f"{finish_reason}"
+            f"[Groq] finishReason: "
+            f"{choice.get('finish_reason', 'UNKNOWN')}"
         )
 
-        parts = (
-            candidate
-            .get("content", {})
-            .get("parts", [])
-        )
-
-        text = "".join(
-            part.get("text", "")
-            for part in parts
-            if part.get("text")
-        ).strip()
+        text = choice.get("message", {}).get("content", "").strip()
 
         if not text:
             raise ValueError(
-                "Gemini returned empty output."
+                "Groq returned empty output."
             )
 
         return text

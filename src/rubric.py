@@ -73,8 +73,9 @@ RUBRIC = [
 ]
 
 
-def rubric_as_prompt_block() -> str:
+def rubric_as_prompt_block(topic: str = "the requested topic") -> str:
     lines = []
     for i, item in enumerate(RUBRIC, start=1):
-        lines.append(f"{i}. [{item['id']}] {item['label']}: {item['check']}")
+        check = item["check"].replace("RAG", topic)
+        lines.append(f"{i}. [{item['id']}] {item['label']}: {check}")
     return "\n".join(lines)
